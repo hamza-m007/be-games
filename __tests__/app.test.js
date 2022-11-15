@@ -3,13 +3,12 @@ const request = require("supertest");
 const db = require("../db/connection.js");
 const seed = require("../db/seeds/seed.js");
 const data = require("../db/data/test-data");
-// const { TestWatcher } = require("jest");
 
 beforeEach(() => {
   return seed(data);
 });
 afterAll(() => {
-  db.end();
+  return db.end();
 });
 
 describe("/api/categories", () => {
@@ -18,7 +17,6 @@ describe("/api/categories", () => {
       .get("/api/categories")
       .expect(200)
       .then((res) => {
-        console.log(res.body);
         res.body.categories.forEach((item) =>
           expect(item).toMatchObject({
             slug: expect.any(String),
