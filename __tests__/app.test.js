@@ -80,22 +80,76 @@ describe("/api/review/:review_id", () => {
         });
       });
   });
-  test("GET - 404: valid but non-existent species_id returns message 'Review not found!'", () => {
+  test("GET - 404: valid but non-existent review_id returns message 'Review not found!'", () => {
     return request(app)
       .get("/api/reviews/100")
       .expect(404)
       .then(({ body }) => {
         expect(body.msg).toBe("Review not found!");
       });
-  })
-   test("GET - 400: invalid review_id returns message 'Invalid id!'", () => {
+  });
+  test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
     return request(app)
       .get("/api/reviews/hello")
       .expect(400)
       .then(({ body }) => {
         expect(body.msg).toBe("Bad request!");
       });
+  });
+});
+
+describe("/api/reviews/:review_id/comments", () => {
+  test("GET - 200: returns an array of comments for the given review_id", () => {
+    return request(app)
+      .get("/api/reviews/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments.length).toBe(3);
+        body.comments.forEach((item) => {
+        expect(item).toMatchObject({
+          comment_id: expect.any(Number),
+          votes: expect.any(Number),
+          created_at: expect.any(String),
+          author: expect.any(String),
+          body: expect.any(String),
+          review_id: 2,
+        });
+        })
+      });
+  })
+  test("GET - 200: orders array of comments by most recent first", () => {
+    return request(app)
+      .get("/api/reviews/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toBeSortedBy("created_at", { descending: true });
+      });
+  })
+  test("GET - 200: returns an empty array when review_id has no comments", () => {
+    return request(app)
+      .get("/api/reviews/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toEqual([]);
+      });
+  })
+  test("GET - 404: valid but non-existent review_id returns message 'Resource not found!'", () => {
+    return request(app)
+      .get("/api/reviews/100/comments")
+      .expect(404)
+      .then(({ body }) => {
+        console.log(body);
+        expect(body.msg).toBe("Resource not found!");
+      });
     })
+    test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
+      return request(app)
+        .get("/api/reviews/hello")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request!");
+        });
+    });
 });
 
 describe("bad paths", () => {
