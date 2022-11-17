@@ -61,40 +61,126 @@ describe("/api/reviews", () => {
 });
 
 describe("/api/review/:review_id", () => {
-  test("GET - 200: returns the single specified review", () => {
-    return request(app)
-      .get("/api/reviews/1")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.review.length).toBe(1);
-        expect(body.review[0]).toMatchObject({
-          review_id: 1,
-          title: expect.any(String),
-          review_body: expect.any(String),
-          designer: expect.any(String),
-          review_img_url: expect.any(String),
-          votes: expect.any(Number),
-          category: expect.any(String),
-          owner: expect.any(String),
-          created_at: expect.any(String),
+  describe("GET requests", () => {
+    test("GET - 200: returns the single specified review", () => {
+      return request(app)
+        .get("/api/reviews/1")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.review.length).toBe(1);
+          expect(body.review[0]).toMatchObject({
+            review_id: 1,
+            title: expect.any(String),
+            review_body: expect.any(String),
+            designer: expect.any(String),
+            review_img_url: expect.any(String),
+            votes: expect.any(Number),
+            category: expect.any(String),
+            owner: expect.any(String),
+            created_at: expect.any(String),
+          });
         });
-      });
+    });
+    test("GET - 404: valid but non-existent review_id returns message 'Review not found!'", () => {
+      return request(app)
+        .get("/api/reviews/100")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Review not found!");
+        });
+    });
+    test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
+      return request(app)
+        .get("/api/reviews/hello")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request!");
+        });
+    });
   });
-  test("GET - 404: valid but non-existent review_id returns message 'Review not found!'", () => {
-    return request(app)
-      .get("/api/reviews/100")
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Review not found!");
-      });
-  });
-  test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
-    return request(app)
-      .get("/api/reviews/hello")
-      .expect(400)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Bad request!");
-      });
+  describe("PATCH requests", () => {
+    test("PATCH - 200: updates the vote count of the specified review_id and then returns the updated review", () => {
+      const requestBody = { inc_votes: 2 };
+      return request(app)
+        .patch("/api/reviews/1")
+        .send(requestBody)
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.review[0]).toMatchObject({
+            review_id: 1,
+            title: "Agricola",
+            designer: "Uwe Rosenberg",
+            owner: "mallionaire",
+            review_img_url:
+              "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+            review_body: "Farmyard fun!",
+            category: "euro game",
+            created_at: expect.any(String),
+            votes: 3,
+          });
+        });
+    });
+    test("PATCH - 200: updates the vote count of the specified review_id and then returns the updated review when passed extra keys in the request body", () => {
+      const requestBody = { inc_votes: 2, extra_key: 'extra key' };
+      return request(app)
+        .patch("/api/reviews/1")
+        .send(requestBody)
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.review[0]).toMatchObject({
+            review_id: 1,
+            title: "Agricola",
+            designer: "Uwe Rosenberg",
+            owner: "mallionaire",
+            review_img_url:
+              "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+            review_body: "Farmyard fun!",
+            category: "euro game",
+            created_at: expect.any(String),
+            votes: 3,
+          });
+        });
+    });
+    test("PATCH - 404: sends an appropriate error message when passed a valid but non-existent review_id", () => {
+      const requestBody = { inc_votes: 2 };
+      return request(app)
+        .patch("/api/reviews/100")
+        .send(requestBody)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Resource not found!");
+        });
+    });
+    test("PATCH - 400: sends an appropriate error message when passed an invalid review_id", () => {
+      const requestBody = { inc_votes: 2 };
+      return request(app)
+        .patch("/api/reviews/hello")
+        .send(requestBody)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request!");
+        });
+    });
+    test("PATCH - 400: sends an appropriate error message when given a invalid key in the request body", () => {
+      const requestBody = { wrong_key: 2 };
+      return request(app)
+        .patch("/api/reviews/1")
+        .send(requestBody)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Missing input data!");
+        });
+    });
+    test("PATCH - 400: sends an appropriate error message when given a invalid data type in the request body", () => {
+      const requestBody = { inc_votes: "hello" };
+      return request(app)
+        .patch("/api/reviews/1")
+        .send(requestBody)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Missing input data!");
+        });
+    });
   });
 });
 
@@ -141,13 +227,12 @@ describe("/api/reviews/:review_id/comments", () => {
         .get("/api/reviews/100/comments")
         .expect(404)
         .then(({ body }) => {
-          console.log(body);
           expect(body.msg).toBe("Resource not found!");
         });
     });
     test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
       return request(app)
-        .get("/api/reviews/hello")
+        .get("/api/reviews/hello/comments")
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Bad request!");
@@ -162,7 +247,6 @@ describe("/api/reviews/:review_id/comments", () => {
         .send(newBody)
         .expect(201)
         .then(({ body }) => {
-          // expect(body.comments.length).toBe(1)
           expect(body.comment).toMatchObject({
             comment_id: 7,
             votes: 0,
@@ -223,7 +307,7 @@ describe("/api/reviews/:review_id/comments", () => {
         .then(({ body }) => {
           expect(body.msg).toBe("Bad request!");
         });
-    })
+    });
     test("POST - 404: sends an appropriate error message when given an valid but non-existent review_id", () => {
       const newBody = { username: "bainesface", body: "What a great game" };
       return request(app)
