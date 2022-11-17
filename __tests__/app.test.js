@@ -184,7 +184,6 @@ describe("/api/reviews/:review_id/comments", () => {
         .send(newBody)
         .expect(201)
         .then(({ body }) => {
-          // expect(body.comments.length).toBe(1)
           expect(body.comment).toMatchObject({
             comment_id: 7,
             votes: 0,
