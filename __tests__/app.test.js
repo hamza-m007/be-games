@@ -60,6 +60,44 @@ describe("/api/reviews", () => {
   });
 });
 
+describe("/api/review/:review_id", () => {
+  test("GET - 200: returns the single specified review", () => {
+    return request(app)
+      .get("/api/reviews/1")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.review.length).toBe(1);
+        expect(body.review[0]).toMatchObject({
+          review_id: 1,
+          title: expect.any(String),
+          review_body: expect.any(String),
+          designer: expect.any(String),
+          review_img_url: expect.any(String),
+          votes: expect.any(Number),
+          category: expect.any(String),
+          owner: expect.any(String),
+          created_at: expect.any(String),
+        });
+      });
+  });
+  test("GET - 404: valid but non-existent species_id returns message 'Review not found!'", () => {
+    return request(app)
+      .get("/api/reviews/100")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Review not found!");
+      });
+  })
+   test("GET - 400: invalid review_id returns message 'Invalid id!'", () => {
+    return request(app)
+      .get("/api/reviews/hello")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Bad request!");
+      });
+    })
+});
+
 describe("bad paths", () => {
   test("GET - 404: invalid request responds with 'Not found!'", () => {
     return request(app)
