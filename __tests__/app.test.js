@@ -99,49 +99,52 @@ describe("/api/review/:review_id", () => {
 });
 
 describe("/api/reviews/:review_id/comments", () => {
-  test("GET - 200: returns an array of comments for the given review_id", () => {
-    return request(app)
-      .get("/api/reviews/2/comments")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.comments.length).toBe(3);
-        body.comments.forEach((item) => {
-        expect(item).toMatchObject({
-          comment_id: expect.any(Number),
-          votes: expect.any(Number),
-          created_at: expect.any(String),
-          author: expect.any(String),
-          body: expect.any(String),
-          review_id: 2,
+  describe("GET requests", () => {
+    test("GET - 200: returns an array of comments for the given review_id", () => {
+      return request(app)
+        .get("/api/reviews/2/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).toBe(3);
+          body.comments.forEach((item) => {
+            expect(item).toMatchObject({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+              review_id: 2,
+            });
+          });
         });
-        })
-      });
-  })
-  test("GET - 200: orders array of comments by most recent first", () => {
-    return request(app)
-      .get("/api/reviews/2/comments")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.comments).toBeSortedBy("created_at", { descending: true });
-      });
-  })
-  test("GET - 200: returns an empty array when review_id has no comments", () => {
-    return request(app)
-      .get("/api/reviews/1/comments")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.comments).toEqual([]);
-      });
-  })
-  test("GET - 404: valid but non-existent review_id returns message 'Resource not found!'", () => {
-    return request(app)
-      .get("/api/reviews/100/comments")
-      .expect(404)
-      .then(({ body }) => {
-        console.log(body);
-        expect(body.msg).toBe("Resource not found!");
-      });
-    })
+    });
+    test("GET - 200: orders array of comments by most recent first", () => {
+      return request(app)
+        .get("/api/reviews/2/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+        });
+    });
+    test("GET - 200: returns an empty array when review_id has no comments", () => {
+      return request(app)
+        .get("/api/reviews/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).toEqual([]);
+        });
+    });
+    test("GET - 404: valid but non-existent review_id returns message 'Resource not found!'", () => {
+      return request(app)
+        .get("/api/reviews/100/comments")
+        .expect(404)
+        .then(({ body }) => {
+          console.log(body);
+          expect(body.msg).toBe("Resource not found!");
+        });
+    });
     test("GET - 400: invalid review_id returns message 'Bad request!'", () => {
       return request(app)
         .get("/api/reviews/hello")
@@ -150,6 +153,89 @@ describe("/api/reviews/:review_id/comments", () => {
           expect(body.msg).toBe("Bad request!");
         });
     });
+  });
+  describe("POST requests", () => {
+    test("POST - 201: inserts a new comment into the database and responds with newly created comment", () => {
+      const newBody = { username: "bainesface", body: "What a great game" };
+      return request(app)
+        .post("/api/reviews/1/comments")
+        .send(newBody)
+        .expect(201)
+        .then(({ body }) => {
+          // expect(body.comments.length).toBe(1)
+          expect(body.comment).toMatchObject({
+            comment_id: 7,
+            votes: 0,
+            created_at: expect.any(String),
+            author: "bainesface",
+            body: "What a great game",
+            review_id: 1,
+          });
+        });
+    });
+    test("POST - 201: inserts a new comment into the database, ignoring unnecessary properties, and responds with newly created comment", () => {
+      const newBody = {
+        username: "bainesface",
+        body: "What a great game",
+        other_key: "other",
+      };
+      return request(app)
+        .post("/api/reviews/1/comments")
+        .send(newBody)
+        .expect(201)
+        .then(({ body }) => {
+          // expect(body.comments.length).toBe(1)
+          expect(body.comment).toMatchObject({
+            comment_id: 7,
+            votes: 0,
+            created_at: expect.any(String),
+            author: "bainesface",
+            body: "What a great game",
+            review_id: 1,
+          });
+        });
+    });
+    test("POST - 400: responds with msg 'Missing Input Data!' when passed a bad comment (e.g. missing data)", () => {
+      const newBody = { username: "bainesface" };
+      return request(app)
+        .post("/api/reviews/1/comments")
+        .send(newBody)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Missing input data!");
+        });
+    });
+    test("POST - 404: sends an appropriate error message when given a non-existent username", () => {
+      const newBody = { username: "kratos", body: "What a great game" };
+      return request(app)
+        .post("/api/reviews/1/comments")
+        .send(newBody)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Resource not found!");
+        });
+    });
+    test("POST - 404: sends an appropriate error message when given an invalid review_id", () => {
+      const newBody = { username: "bainesface", body: "What a great game" };
+      return request(app)
+        .post("/api/reviews/hello/comments")
+        .send(newBody)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request!");
+        });
+    })
+    test("POST - 404: sends an appropriate error message when given an valid but non-existent review_id", () => {
+      const newBody = { username: "bainesface", body: "What a great game" };
+      return request(app)
+        .post("/api/reviews/100/comments")
+        .send(newBody)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Resource not found!");
+        });
+    });
+  });
 });
 
 describe("bad paths", () => {
