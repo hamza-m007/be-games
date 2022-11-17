@@ -67,3 +67,24 @@ exports.selectCommentsByReviewId = (review_id) => {
       });
   });
 };
+
+exports.insertComment = (review_id, body, author) => {
+  return checkExists("users", "username", author).then(() => {
+    return checkExists("reviews", "review_id", review_id).then(() => {
+      return db
+        .query(
+          `
+        INSERT INTO comments
+        (review_id, author, body)
+        VALUES
+        ($1, $2, $3)
+        RETURNING *
+        `,
+          [review_id, author, body]
+        )
+        .then((res) => {
+          return res.rows[0];
+        });
+    });
+  });
+};
