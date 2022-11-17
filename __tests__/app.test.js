@@ -68,7 +68,7 @@ describe("/api/review/:review_id", () => {
       .then(({ body }) => {
         expect(body.review.length).toBe(1);
         expect(body.review[0]).toMatchObject({
-          review_id: expect.any(Number),
+          review_id: 1,
           title: expect.any(String),
           review_body: expect.any(String),
           designer: expect.any(String),
