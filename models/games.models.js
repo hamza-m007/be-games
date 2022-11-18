@@ -107,3 +107,15 @@ exports.updateReviewById = (review_id, inc_votes) => {
       return res.rows;
     });
 };
+
+exports.selectUsers = () => {
+  return db
+    .query(
+    `
+    SELECT * FROM users
+    `
+    )
+    .then((result) => {
+      return result.rows;
+    });
+};
