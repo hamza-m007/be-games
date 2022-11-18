@@ -3,6 +3,7 @@ const {
   selectReviewById,
   selectCommentsByReviewId,
   insertComment,
+  updateReviewById,
 } = require("../models/games.models");
 const { selectCategories, selectReviews } = require("../models/games.models");
 
@@ -44,11 +45,26 @@ exports.postComment = (req, res, next) => {
   const { review_id } = req.params;
   const { body, username } = req.body;
   if (!body || !username) {
-    res.status(400).send({ msg: "Missing input data!" })
+    res.status(400).send({ msg: "Missing input data!" });
+  } else {
+    insertComment(review_id, body, username)
+      .then((addedComment) => {
+        res.status(201).send({ comment: addedComment });
+      })
+      .catch(next);
   }
-  insertComment(review_id, body, username)
-    .then((addedComment) => {
-      res.status(201).send({ comment: addedComment });
-    })
-    .catch(next);
+};
+
+exports.patchReview = (req, res, next) => {
+  const { review_id } = req.params;
+  const { inc_votes } = req.body;
+  if (!inc_votes || typeof inc_votes !== "number") {
+    res.status(400).send({ msg: "Missing input data!" });
+  } else {
+    updateReviewById(review_id, inc_votes)
+      .then((updatedReview) => {
+        res.status(200).send({ review: updatedReview });
+      })
+      .catch(next);
+  }
 };

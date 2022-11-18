@@ -69,22 +69,41 @@ exports.selectCommentsByReviewId = (review_id) => {
 };
 
 exports.insertComment = (review_id, body, author) => {
-  return checkExists("users", "username", author).then(() => {
-    return checkExists("reviews", "review_id", review_id).then(() => {
-      return db
-        .query(
-          `
+  return checkExists("users", "username", author)
+    .then(() => {
+      return checkExists("reviews", "review_id", review_id);
+    })
+    .then(() => {
+      return db.query(
+        `
         INSERT INTO comments
         (review_id, author, body)
         VALUES
         ($1, $2, $3)
         RETURNING *
         `,
-          [review_id, author, body]
-        )
-        .then((res) => {
-          return res.rows[0];
-        });
+        [review_id, author, body]
+      );
+    })
+    .then((res) => {
+      return res.rows[0];
     });
-  });
+};
+
+exports.updateReviewById = (review_id, inc_votes) => {
+  return checkExists("reviews", "review_id", review_id)
+    .then(() => {
+      return db.query(
+        `
+    UPDATE reviews
+    SET votes = votes + $1
+    WHERE review_id = $2
+    RETURNING *;
+    `,
+        [inc_votes, review_id]
+      );
+    })
+    .then((res) => {
+      return res.rows;
+    });
 };
