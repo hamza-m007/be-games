@@ -4,6 +4,7 @@ const {
   selectCommentsByReviewId,
   insertComment,
   updateReviewById,
+  selectUsers,
 } = require("../models/games.models");
 const { selectCategories, selectReviews } = require("../models/games.models");
 
@@ -68,3 +69,10 @@ exports.patchReview = (req, res, next) => {
       .catch(next);
   }
 };
+
+exports.getUsers = (req, res, next) => {
+  selectUsers().then((users) => {
+    res.status(200).send({ users })
+  })
+  .catch(next)
+}

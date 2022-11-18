@@ -121,7 +121,7 @@ describe("/api/review/:review_id", () => {
         });
     });
     test("PATCH - 200: updates the vote count of the specified review_id and then returns the updated review when passed extra keys in the request body", () => {
-      const requestBody = { inc_votes: 2, extra_key: 'extra key' };
+      const requestBody = { inc_votes: 2, extra_key: "extra key" };
       return request(app)
         .patch("/api/reviews/1")
         .send(requestBody)
@@ -318,6 +318,24 @@ describe("/api/reviews/:review_id/comments", () => {
           expect(body.msg).toBe("Resource not found!");
         });
     });
+  });
+});
+
+describe("/api/users", () => {
+  test("GET- 200: returns an array of user objects", () => {
+    return request(app)
+      .get("/api/users")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.users.length).toBe(4);
+        body.users.forEach((user) => {
+          expect(user).toMatchObject({
+            username: expect.any(String),
+            name: expect.any(String),
+            avatar_url: expect.any(String),
+          });
+        });
+      });
   });
 });
 
