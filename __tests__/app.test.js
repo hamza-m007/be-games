@@ -67,8 +67,7 @@ describe("/api/review/:review_id", () => {
         .get("/api/reviews/1")
         .expect(200)
         .then(({ body }) => {
-          expect(body.review.length).toBe(1);
-          expect(body.review[0]).toMatchObject({
+          expect(body.review).toMatchObject({
             review_id: 1,
             title: expect.any(String),
             review_body: expect.any(String),
@@ -78,17 +77,15 @@ describe("/api/review/:review_id", () => {
             category: expect.any(String),
             owner: expect.any(String),
             created_at: expect.any(String),
-            comment_count: '0',
           });
         });
     });
-    test("GET - 200: returns the single specified review", () => {
+    test("GET - 200: returns the single specified review with a comment_count property", () => {
       return request(app)
         .get("/api/reviews/2")
         .expect(200)
         .then(({ body }) => {
-          expect(body.review.length).toBe(1);
-          expect(body.review[0]).toMatchObject({
+          expect(body.review).toMatchObject({
             review_id: 2,
             title: "Jenga",
             designer: "Leslie Scott",
@@ -99,7 +96,27 @@ describe("/api/review/:review_id", () => {
             category: "dexterity",
             created_at: expect.any(String),
             votes: 5,
-            comment_count: '3',
+            comment_count: "3",
+          });
+        });
+    });
+    test("GET - 200: returns the single specified review with a default value of 0 for comment_count if the review has no comments", () => {
+      return request(app)
+        .get("/api/reviews/1")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.review).toMatchObject({
+            review_id: 1,
+            title: "Agricola",
+            designer: "Uwe Rosenberg",
+            owner: "mallionaire",
+            review_img_url:
+              "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+            review_body: "Farmyard fun!",
+            category: "euro game",
+            created_at: expect.any(String),
+            votes: 1,
+            comment_count: "0",
           });
         });
     });
